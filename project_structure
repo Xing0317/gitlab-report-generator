@@ -1,0 +1,7 @@
+gitlab_events/
+├── src/
+│   ├── __init__.py
+│   ├── models.py
+│   ├── api_client.py
+│   └── main.py
+└── requirements.txt 
