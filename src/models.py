@@ -14,7 +14,7 @@ class PushData(BaseModel):
     commit_count: int
     action: str
     ref_type: str
-    commit_from: str
+    commit_from: Optional[str] = None
     commit_to: str
     ref: str
     commit_title: str
@@ -40,7 +40,7 @@ class GitlabEvent(BaseModel):
     target_title: Optional[str]
     created_at: datetime
     author: Author
-    push_data: Optional[PushData]
+    push_data: Optional[PushData] = None
     author_username: str
     project: Optional[Project] = None
     

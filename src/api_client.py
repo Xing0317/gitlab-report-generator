@@ -20,7 +20,9 @@ class GitlabApiClient:
         params = {
             'after': after.strftime('%Y-%m-%d'),
             'before': before.strftime('%Y-%m-%d'),
-            'sort': 'asc'
+            'sort': 'asc',
+            'page': 1,
+            'per_page': 9999
         }
 
         response = requests.get(url, headers=self.headers, params=params)

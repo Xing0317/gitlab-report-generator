@@ -20,7 +20,11 @@ def format_events_by_project(events: List[GitlabEvent], client: GitlabApiClient)
 
     # 按项目和分支对事件进行分组
     for event in sorted(events, key=lambda x: x.created_at):
-        if event.project_id and event.push_data:
+        # 跳过没有 push_data 的事件（如 joined 事件）
+        if not event.push_data:
+            continue
+            
+        if event.project_id:
             project = project_cache.get(event.project_id)
             if project:
                 branch = event.push_data.ref
@@ -50,12 +54,15 @@ def generate_markdown_content(after_date: datetime, before_date: datetime, proje
             content.append(f"\n### 分支：{branch_name}")
             
             # 统计提交数量
-            total_commits = sum(e.push_data.commit_count for e in branch_events)
+            total_commits = sum(e.push_data.commit_count for e in branch_events if e.push_data)
             content.append(f"\n- 总提交数：{total_commits}")
             
             # 显示每次提交的关键信息
             content.append("\n#### 提交记录：")
             for event in branch_events:
+                if not event.push_data:
+                    continue
+                    
                 commit_date = event.created_at.strftime("%Y-%m-%d %H:%M")
                 commit_title = event.push_data.commit_title
                 content.append(f"\n##### {commit_date} - {commit_title}")
@@ -65,9 +72,10 @@ def generate_markdown_content(after_date: datetime, before_date: datetime, proje
                     project = client.get_project(event.project_id)
                     if project and event.push_data:
                         commit_url = f"{client.base_url}/{project.path_with_namespace}/-/commit/{event.push_data.commit_to}"
-                        compare_url = f"{client.base_url}/{project.path_with_namespace}/-/compare/{event.push_data.commit_from}...{event.push_data.commit_to}"
+                        if event.push_data.commit_from:
+                            compare_url = f"{client.base_url}/{project.path_with_namespace}/-/compare/{event.push_data.commit_from}...{event.push_data.commit_to}"
+                            content.append(f"\n- [查看文件对比]({compare_url})")
                         content.append(f"\n- [查看提交详情]({commit_url})")
-                        content.append(f"\n- [查看文件对比]({compare_url})")
                 
                 content.append("\n---")
             
@@ -121,8 +129,8 @@ def main():
         
         # 设置查询参数
         user_id = 69
-        after_date = datetime(2024, 11, 21)
-        before_date = datetime(2024, 11, 30)
+        after_date = datetime(2024, 11, 30)
+        before_date = datetime(2025, 4, 2)
         
         # 询问用户是否需要生成链接
         while True:
